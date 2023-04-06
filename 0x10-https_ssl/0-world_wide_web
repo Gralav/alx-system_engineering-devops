@@ -12,3 +12,7 @@ elif [ "$#" -eq 2 ]; then
 else
     echo "Usage: $0 <domain> [<subdomain>]"
 fi
+  return 0
+}
+
+func "$1" "$2"
