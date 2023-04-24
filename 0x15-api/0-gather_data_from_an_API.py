@@ -1,47 +1,28 @@
-# Import requests module
-import requests
+#!/usr/bin/python3
+"""
+Write a Python script that, using this REST API, for a given employee ID,
+returns information about his/her TODO list progress
+"""
+if __name__ == "__main__":
 
-# Define a function that takes an employee ID and returns their TODO list progress
-def get_employee_todo_progress(employee_id):
-    # Send a GET request to get user information
-    user_response = requests.get(f"https://jsonplaceholder.typicode.com/users/{employee_id}")
+    import requests
+    import sys
 
-    # Check if the request was successful
-    if user_response.status_code != 200:
-        raise Exception(f"User request failed with status code {user_response.status_code}")
+    if len(sys.argv) == 2 and sys.argv[1].isdigit():
+        u_url = 'https://jsonplaceholder.typicode.com/users/'
+        td_url = 'https://jsonplaceholder.typicode.com/todos?userId='
 
-    # Parse user data as JSON and get employee name
-    user_data = user_response.json()
-    employee_name = user_data["name"]
+        EMPLOYEE_NAME = requests.get(u_url + sys.argv[1]).json()['name']
+        NUMBER_OF_DONE_TASKS = len([task for task in requests.
+                                    get(td_url + sys.argv[1]).json()
+                                    if task['completed'] is True])
+        TOTAL_NUMBER_OF_TASKS = len(requests.get(td_url + sys.argv[1]).json())
+        DONE_TASKS_TITLES = [task['title'] for task in requests.
+                             get(td_url + sys.argv[1]).json()
+                             if task['completed'] is True]
 
-    # Send another GET request to get TODO items for that user
-    todo_response = requests.get(f"https://jsonplaceholder.typicode.com/todos?userId={employee_id}")
-
-    # Check if the request was successful
-    if todo_response.status_code != 200:
-        raise Exception(f"TODO request failed with status code {todo_response.status_code}")
-
-    # Parse TODO data as JSON and loop through it
-    todo_data = todo_response.json()
-    done_tasks = 0 # Counter for done tasks
-    completed_task_titles = [] # List for completed task titles
-    for item in todo_data:
-        # Check if item is completed
-        if item["completed"]:
-            # Increment done tasks counter and append item title to list
-            done_tasks += 1
-            completed_task_titles.append(item["title"])
-
-    # Get total number of tasks
-    total_tasks = len(todo_data)
-
-    # Return a dictionary with employee name and TODO list progress
-    return {
-        "employee_name": employee_name,
-        "done_tasks": done_tasks,
-        "total_tasks": total_tasks,
-        "completed_task_titles": completed_task_titles
-    }
-
-# Get employee ID from user input and convert it to integer
-employee_id = int(input("Enter employee ID: "))
+        print('Employee {} is done with tasks({}/{}):'.
+              format(EMPLOYEE_NAME, NUMBER_OF_DONE_TASKS,
+                     TOTAL_NUMBER_OF_TASKS))
+        for TASK_TITLE in DONE_TASKS_TITLES:
+            print('\t {}'.format(TASK_TITLE))
