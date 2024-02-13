@@ -1,27 +1,24 @@
 #!/bin/bash
 
-# Install Nginx (if not already installed)
-apt-get update
-apt-get install -y nginx
+# Ensure the nginx user exists
+if ! id "nginx" &>/dev/null; then
+    useradd -r -s /bin/false nginx
+fi
 
-# Create a new Nginx configuration file
-cat <<EOF > /etc/nginx/sites-available/default
-server {
-    listen 8080 default_server;
-    listen [::]:8080 default_server;
-    server_name _;
+# Change the Nginx user in nginx.conf
+sed -i 's/user www-data;/user nginx;/' /etc/nginx/nginx.conf
 
-    # Set the user to nginx
-    user nginx;
+# Find the server block for port 80 and change it to listen on 8080
+sed -i 's/listen 80;/listen 8080;/' /etc/nginx/sites-available/default
 
-    # Other Nginx configuration directives go here
-    # ...
-}
-EOF
-
-# Enable the configuration
-ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
-
-# Restart Nginx to apply changes
+# Reload or restart nginx to apply the changes
 systemctl restart nginx
+
+# Verify the changes (Optional)
+echo "Nginx processes:"
+ps aux | grep nginx
+
+echo "Listening ports:"
+netstat -tuln | grep :8080
+
 
